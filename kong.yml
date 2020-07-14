@@ -1,0 +1,83 @@
+# ------------------------------------------------------------------------------
+# This is an example file to get you started with using
+# declarative configuration in Kong.
+# ------------------------------------------------------------------------------
+
+# Metadata fields start with an underscore (_)
+# Fields that do not start with an underscore represent Kong entities and attributes
+
+# _format_version is mandatory,
+# it specifies the minimum version of Kong that supports the format
+
+_format_version: "1.1"
+
+# Each Kong entity (core entity or custom entity introduced by a plugin)
+# can be listed in the top-level as an array of objects:
+
+services:
+- name: user-api
+  url: http://localhost:8002
+  # Entities that have a foreign-key relationship can be nested:
+  routes:
+  - name: user-api-route
+    paths:
+    - /user-api
+  plugins:
+  - name: proxy-cache
+    config:
+      content_type:
+      - application/json
+      cache_ttl: 30
+      strategy: memory
+  - name: key-auth
+- name: client-api
+  url: http://localhost:8003
+  # Entities that have a foreign-key relationship can be nested:
+  routes:
+  - name: client-api-route
+    paths:
+    - /client-api
+  plugins:
+  - name: rate-limiting
+    config:
+      minute: 5
+      policy: local
+#- name: another-service
+#  url: https://example.org
+
+#routes:
+#- name: hello-route
+#  # Relationships can also be specified between top-level entities,
+#  # either by name or by id
+#  service: hello
+#  hosts: ["localhost:8002"]
+
+consumers:
+- username: user-api-user
+  # Custom entities from plugin can also be specified
+  # If they specify a foreign-key relationshp, they can also be nested
+  keyauth_credentials:
+  - key: my-key
+  plugins:
+  - name: rate-limiting
+    _comment: "these are default rate-limits for user example-user"
+    config:
+      minute: 5
+      policy: local
+
+# When an entity has multiple foreign-key relationships
+# (e.g. a plugin matching on both consumer and service)
+# it must be specified as a top-level entity, and not through
+# nesting.
+
+#plugins:
+#- name: rate-limiting
+##  consumer: example-user
+#  service: client-api
+##  _comment: "example-user is extra limited when using another-service"
+#  config:
+#    hour: 2
+#  # tags are for your organization only and have no meaning for Kong:
+#  tags:
+#  - extra_limits
+#  - my_tag
